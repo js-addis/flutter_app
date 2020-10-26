@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:catbox/services/api.dart';
 import 'package:catbox/models/cat.dart';
@@ -9,28 +10,21 @@ class CatList extends StatefulWidget {
 
 class _CatListState extends State<CatList> {
 
-List<Cat> _cats = [];
+  List<Cat> _cats = [];
 
-@override
-// Runs when app loads
-void initState() {
-  super.initState();
-  _loadCats();
-}
-// ---------------------------------------------
-// ----- FUNCTION THAT LOADS DATA INTO UI ------
-// ---------------------------------------------
-// 1. Gets JSON file from Assets
-// 2. sends JSON file to CatApi 
-// 3. Parses JSON file and adds each cat to an array called cats.
-// 4. Sends each cat in the array to the state of CatList
-_loadCats() async {
-  String fileData = await DefaultAssetBundle.of(context).loadString("assets/cats.json");
-  for(Cat cat in CatApi.allCatsFromJson(fileData)) {
-    _cats.add(cat);
+  @override
+
+  void initState() {
+    super.initState();
+    _loadCats();
   }
-  print(_cats.toString());
-}
+
+  _loadCats() async {
+    String fileData = await DefaultAssetBundle.of(context).loadString("assets/cats.json");
+    setState((){
+      _cats = CatApi.allCatsFromJson(fileData);
+    });
+  }
 
   Widget _getAppTitleWidget() {
     return new Text(
@@ -43,11 +37,77 @@ _loadCats() async {
     );
   }
 
+  Widget _buildBody() {
+    return new Container(
+      margin: const EdgeInsets.fromLTRB(
+        8.0,
+        56.0,
+        8.0,
+        0.0
+      ),
+      child: new Column(
+        children: <Widget> [
+          _getAppTitleWidget(),
+          _getListViewWidget()
+        ],
+      )
+    );
+  }
+
+  Widget _buildCatItem(BuildContext context, int index) {
+    Cat cat = _cats[index];
+
+    return new Container(
+      margin: const EdgeInsets.only(top: 5.0),
+      child: new Card(
+        child: new Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget> [
+            new ListTile(
+              //onTap: //TODO
+              leading: new Hero(
+                tag: index,
+                child: new CircleAvatar(
+                  backgroundImage: new NetworkImage(cat.avatarUrl),
+                ),
+              ),
+              title: new Text(
+                cat.name,
+                style: new TextStyle(fontWeight: FontWeight.bold, color: Colors.black54),
+              ),
+              subtitle: new Text(cat.description),
+              isThreeLine: true,
+              dense: false,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<Null> refresh() {
+    _loadCats();
+    return new Future<Null>.value();
+  }
+
+  Widget _getListViewWidget() {
+    return new Flexible(
+      child: new RefreshIndicator(
+        onRefresh: refresh,
+        child: new ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: _cats.length,
+          itemBuilder: _buildCatItem,
+        )
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
       backgroundColor: Colors.blue,
-      body: _getAppTitleWidget(),
+      body: _buildBody(),
     );
   }
 }
