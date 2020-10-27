@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:catbox/services/api.dart';
 import 'package:catbox/models/cat.dart';
+import 'package:catbox/ui/cat_details/details_page.dart';
+import 'package:catbox/utils/routes.dart';
 
 class CatList extends StatefulWidget {
   @override
@@ -24,6 +26,17 @@ class _CatListState extends State<CatList> {
     setState((){
       _cats = CatApi.allCatsFromJson(fileData);
     });
+  }
+
+  _navigateToCatDetails(Cat cat, Object avatarTag) {
+    Navigator.of(context).push(
+      new FadePageRoute(
+        builder: (c) {
+          return new CatDetailsPage(cat, avatarTag: avatarTag);
+        },
+        settings: new RouteSettings(),
+      )
+    );
   }
 
   Widget _getAppTitleWidget() {
@@ -64,7 +77,7 @@ class _CatListState extends State<CatList> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget> [
             new ListTile(
-              //onTap: //TODO
+              onTap: () => _navigateToCatDetails(cat, index),
               leading: new Hero(
                 tag: index,
                 child: new CircleAvatar(
